@@ -1,0 +1,71 @@
+---
+title: "Redes Neurais"
+output: html_document
+---
+
+## Redes Neurais Artificiais
+
+As redes neurais artificiais (RNA) replicam o comportamento biológico de neurõnios no contexto de modelos de predição
+
+Uma opção de ajuste de redes neurais no `R` é o pacote `nnet`, conforme apresentado abaixo. Esta versão do `nnet` exige uma resposta matricial, na qual as colunas representam classes e os valores são funções indicadoras.
+
+```{r}
+data(iris)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+head(iris)
+
+index=sample(nrow(iris),50)
+iriset=iris[index,]
+resp = model.matrix(~Species-1, data=iriset)
+fit = nnet(iriset[,1:4], resp, size=2, rang=0.1, decay=5e-4) 
+
+complete.cases(iris)#verificar dodos faltantes
+
+#visualização da rede neural
+
+library(gamlss.add)
+plot(fit)
+
+
+
+```
+
+Para realização de predições esta RNA podemos usar o `predict`. A tabela de confusão pode ser determinada empregando a comando `table` 
+
+```{r pred}
+preds=predict(fit)
+classes=c('setosa','versicolor','verginica')[apply(preds, 1, which.max)]
+table(iriset$Species,classes)
+
+```
+
+```{r pred2}
+preds=predict(fit,newdata=iris[-index,-5])
+classes=c('setosa','versicolor','verginica')[apply(preds, 1, which.max)]
+(tbl=table(iris$Species[-index],classes))
+sum(diag(tbl))/sum(tbl)
+```
+
+##Aprendizado de Máquina Express
+
+```{r caret}
+library(caret)
+library(e1071)
+paraMs=trainControl(method="cv",number=50,p=.60)
+fit=train(iris[,-5],iris[,5],method="nnet",tuneLength = 10, trControl=paraMs)
+plot(fit)
+#Modelo que maximiza a acurácia preditiva
+fit$finalModel
+
+
+fit2=train(iris[,-5],iris[,5],method="rf",tuneLength = 10, trControl=paraMs)
+plot(fit2)
+#Modelo que maximiza a acurácia preditiva
+fit2$finalModel
+
+
+```
